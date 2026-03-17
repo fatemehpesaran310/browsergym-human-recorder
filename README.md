@@ -1,3 +1,51 @@
+# Human Trajectory Recorder for BrowserGym
+
+Record free-form human browser interactions and automatically translate them into BrowserGym action strings. Built on top of BrowserGym and WebArena-Pro.
+
+## Quick Setup
+
+```bash
+# 1. Create conda environment
+conda create -n webarena-pro python=3.11
+conda activate webarena-pro
+
+# 2. Clone and install
+git clone https://github.com/fatemehpesaran310/browsergym-human-recorder.git
+cd browsergym-human-recorder
+pip install -e browsergym/core
+pip install -e browsergym/experiments
+pip install -e browsergym/webarena_pro
+
+# 3. Install playwright browsers
+playwright install chromium
+
+# 4. Set environment variables
+export WAP_MATTERMOST="http://<your-mattermost-host>:8065"
+
+# 5. Run the recorder
+python record_trajectory.py --task_id 0 --output_dir ./trajectories
+```
+
+## Usage
+
+```
+python record_trajectory.py --task_id <0-9> --output_dir ./trajectories [--max_steps 50] [--timeout 600]
+```
+
+- The browser opens with the task loaded and an overlay panel (top-right) showing the task goal
+- Interact with the browser naturally (click, type, scroll, navigate)
+- All actions are automatically captured and translated to BrowserGym actions
+- Use the overlay to submit your answer, report infeasible, or stop recording
+- Trajectory (actions, screenshots, AXTree) is saved to the output directory
+
+## Output
+
+Each recording produces a directory containing:
+- `trajectory.json` — actions, AXTree, timestamps, rewards
+- `screenshots/` — screenshot at each step
+
+---
+
 <div align="center">
 
 ![BrowserGym banner](https://github.com/user-attachments/assets/4853f210-43ac-4107-a0d2-95c9c614dbe7)
