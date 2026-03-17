@@ -36,7 +36,17 @@ python record_trajectory.py --task_id <0-9> --output_dir ./trajectories [--max_s
 - Interact with the browser naturally (click, type, scroll, navigate)
 - All actions are automatically captured and translated to BrowserGym actions
 - Use the overlay to submit your answer, report infeasible, or stop recording
+- The overlay panel is **draggable** — click and drag the title bar to reposition it
 - Trajectory (actions, screenshots, AXTree) is saved to the output directory
+
+### Keyboard Shortcuts
+
+> **Important:** To record browser back/forward navigation, you must use these keyboard shortcuts instead of the browser's back/forward buttons.
+
+| Shortcut | Action |
+|---|---|
+| `Cmd + [` (macOS) / `Alt + Left` (Windows/Linux) | Go back |
+| `Cmd + ]` (macOS) / `Alt + Right` (Windows/Linux) | Go forward |
 
 ## Output
 

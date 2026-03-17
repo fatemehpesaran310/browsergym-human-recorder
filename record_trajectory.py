@@ -182,11 +182,35 @@ def make_overlay_js(goal_text=""):
     panel.id = '__bgym_panel';
     panel.style.cssText = 'background: #1a1a2e; color: #eee; border: 2px solid #16213e; border-radius: 8px; padding: 12px; width: 280px; font-family: monospace; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;';
 
-    // Title
+    // Title bar (draggable handle)
     var title = document.createElement('div');
-    title.style.cssText = 'font-weight: bold; margin-bottom: 8px; color: #e94560;';
-    title.textContent = 'Trajectory Recorder';
+    title.style.cssText = 'font-weight: bold; margin-bottom: 8px; color: #e94560; cursor: grab; user-select: none; padding: 4px 0;';
+    title.textContent = 'Trajectory Recorder (drag to move)';
     panel.appendChild(title);
+
+    // --- Drag logic ---
+    var isDragging = false;
+    var dragOffsetX = 0, dragOffsetY = 0;
+    title.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        title.style.cursor = 'grabbing';
+        var rect = overlay.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        overlay.style.left = (e.clientX - dragOffsetX) + 'px';
+        overlay.style.top = (e.clientY - dragOffsetY) + 'px';
+        overlay.style.right = 'auto';
+    });
+    document.addEventListener('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            title.style.cursor = 'grab';
+        }
+    });
 
     // Task goal
     var goalDiv = document.createElement('div');
