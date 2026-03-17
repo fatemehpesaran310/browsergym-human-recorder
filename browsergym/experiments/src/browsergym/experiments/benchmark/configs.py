@@ -56,6 +56,14 @@ DEFAULT_HIGHLEVEL_ACTION_SET_ARGS = {
         retry_with_force=True,
         demo_mode="off",
     ),
+    # WebArena-Pro benchmark
+    "webarena_pro": HighLevelActionSetArgs(
+        subsets=["bid"],
+        multiaction=False,
+        strict=False,
+        retry_with_force=True,
+        demo_mode="off",
+    ),
     # from https://arxiv.org/abs/2307.13854
     "webarena": HighLevelActionSetArgs(
         subsets=["webarena"],
@@ -117,6 +125,18 @@ DEFAULT_BENCHMARKS = {
             seeds_rng=np.random.RandomState(42),
         ),
         task_metadata=task_metadata("miniwob"),
+    ),
+    "webarena_pro": lambda n_repeats=1: Benchmark(
+        name="webarena_pro",
+        high_level_action_set_args=DEFAULT_HIGHLEVEL_ACTION_SET_ARGS["webarena_pro"],
+        is_multi_tab=False,
+        supports_parallel_seeds=False,
+        backends=["webarena_pro"],
+        env_args_list=make_env_args_list_from_fixed_seeds(
+            task_list=[f"webarena_pro.{i}" for i in range(10)],
+            max_steps=15,
+            fixed_seeds=[42],
+        ),
     ),
     "webarena": lambda n_repeats=1: Benchmark(
         name="webarena",
