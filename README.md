@@ -20,9 +20,39 @@ pip install -e browsergym/webarena_pro
 playwright install chromium
 
 # 4. Set environment variables
-export WAP_MATTERMOST="http://<your-mattermost-host>:8065"
+export WAP_MATTERMOST="http://localhost:8065"
+```
 
-# 5. Run the recorder
+## Mattermost Docker Setup
+
+A pre-populated Mattermost Docker image is provided. Download it and load it into Docker:
+
+1. **Download** the Docker image: [mattermost-populated.tar](https://drive.google.com/file/d/1aM2zyvCgONH0pD8MpYKj6i2e1Xo4VueL/view?usp=sharing)
+
+```bash
+# 1. Load the image from the downloaded .tar file
+docker load -i mattermost-populated.tar
+
+# 2. Run the Mattermost container
+docker run -d --name mattermost -p 8065:8065 mattermost-populated
+
+# 3. Verify it's running (visit http://localhost:8065)
+```
+
+**Important:** The Docker container must be reset after each task to ensure a clean state:
+
+```bash
+# Stop and remove the container
+docker rm -f mattermost
+
+# Re-run a fresh container
+docker run -d --name mattermost -p 8065:8065 mattermost-populated
+```
+
+## Run the Recorder
+
+```bash
+# Run the recorder
 python record_trajectory.py --task_id 0 --output_dir ./trajectories
 ```
 
