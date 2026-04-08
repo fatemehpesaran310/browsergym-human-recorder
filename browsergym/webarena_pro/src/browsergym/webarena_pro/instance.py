@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # Environment variable names for each site.
 # Add new sites here as the benchmark grows.
 # Convention: WAP_<SITE_NAME> (WAP = WebArena-Pro)
-ENV_VARS = ("MATTERMOST",)
+ENV_VARS = ("MATTERMOST", "NEXTCLOUD")
 
 # Default credentials per site (used for UI login).
 # Add new sites here when expanding the benchmark.
@@ -18,6 +18,10 @@ ACCOUNTS = {
     "mattermost": {
         "username": "admin",
         "password": "Admin@Secure123",
+    },
+    "nextcloud": {
+        "username": "agent1",
+        "password": "agentpass",
     },
 }
 
@@ -89,6 +93,14 @@ class WebArenaProInstance:
                 page.locator("#input_password-input").fill(password)
                 page.locator("#saveSetting").click()
                 # wait for login to complete
+                page.wait_for_url(f"{url}/**", timeout=15000)
+
+            case "nextcloud":
+                page.goto(f"{url}/login")
+                page.wait_for_load_state("networkidle")
+                page.get_by_label("Account name or email").fill(username)
+                page.get_by_label("Password", exact=True).fill(password)
+                page.get_by_role("button", name="Log in", exact=True).click()
                 page.wait_for_url(f"{url}/**", timeout=15000)
 
             case _:

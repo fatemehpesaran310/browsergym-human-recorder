@@ -1,3 +1,3 @@
 # Task IDs for the WebArena-Pro benchmark.
 # This will grow as more tasks are added.
-TASK_IDS = range(10)
+TASK_IDS = range(10000)

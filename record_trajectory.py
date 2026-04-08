@@ -174,6 +174,8 @@ def make_overlay_js(goal_text=""):
 (function() {
     if (document.getElementById('__bgym_overlay')) return;
 
+    if (!document.body) return;  // page still loading, will retry next poll cycle
+
     var overlay = document.createElement('div');
     overlay.id = '__bgym_overlay';
     overlay.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 999999;';
@@ -603,6 +605,10 @@ def record(task_id, output_dir, max_steps=50, timeout=600):
             if time.time() - start_time > timeout:
                 print("[recorder] Timeout reached.")
                 break
+
+            # Re-inject scripts every cycle: SPA navigations clear the DOM and
+            # remove the overlay; this ensures it reappears within one poll cycle.
+            inject_scripts(raw_env.page, goal)
 
             # Poll events
             raw_events = poll_events(raw_env.page)
