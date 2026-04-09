@@ -30,15 +30,35 @@ def _run(cmd, **kwargs):
     return subprocess.run(cmd, shell=True, check=True, **kwargs)
 
 
+def _docker_cmd():
+    """Return the docker command, using sudo if needed."""
+    # Try docker without sudo first
+    result = subprocess.run(
+        "docker info", shell=True, capture_output=True, text=True,
+    )
+    if result.returncode == 0:
+        return "docker"
+    # Try with sudo
+    result = subprocess.run(
+        "sudo docker info", shell=True, capture_output=True, text=True,
+    )
+    if result.returncode == 0:
+        return "sudo docker"
+    return None
+
+
 def _docker_available():
     """Check if docker is available."""
-    return shutil.which("docker") is not None
+    return _docker_cmd() is not None
 
 
 def _docker_image_exists(image_name):
     """Check if a Docker image is already loaded."""
+    docker = _docker_cmd()
+    if not docker:
+        return False
     result = subprocess.run(
-        f"docker images -q {image_name}",
+        f"{docker} images -q {image_name}",
         shell=True, capture_output=True, text=True,
     )
     return bool(result.stdout.strip())
@@ -46,8 +66,11 @@ def _docker_image_exists(image_name):
 
 def _docker_container_running(container_name):
     """Check if a Docker container is running."""
+    docker = _docker_cmd()
+    if not docker:
+        return False
     result = subprocess.run(
-        f"docker ps -q -f name=^/{container_name}$",
+        f"{docker} ps -q -f name=^/{container_name}$",
         shell=True, capture_output=True, text=True,
     )
     return bool(result.stdout.strip())
@@ -86,7 +109,7 @@ def cmd_install(args):
             _run(f"{sys.executable} -m pip install -q gdown")
             _run(f"gdown {MATTERMOST_DOCKER_GDRIVE_ID} -O {tar_path}")
         print("  Loading Docker image...")
-        _run(f"docker load -i {tar_path}")
+        _run(f"{_docker_cmd()} load -i {tar_path}")
         print(f"  Cleaning up {tar_path}...")
         tar_path.unlink(missing_ok=True)
 
@@ -100,31 +123,33 @@ def cmd_install(args):
 def cmd_launch(args):
     """Launch the trajectory recorder."""
     # Ensure Mattermost container is running
-    if _docker_available():
+    docker = _docker_cmd()
+    if docker and not args.mattermost_url:
         if _docker_container_running(MATTERMOST_CONTAINER_NAME):
             if args.reset:
                 print("[launch] Resetting Mattermost container...")
-                _run(f"docker rm -f {MATTERMOST_CONTAINER_NAME}")
+                _run(f"{docker} rm -f {MATTERMOST_CONTAINER_NAME}")
                 _run(
-                    f"docker run -d --name {MATTERMOST_CONTAINER_NAME}"
+                    f"{docker} run -d --name {MATTERMOST_CONTAINER_NAME}"
                     f" -p {MATTERMOST_PORT}:{MATTERMOST_PORT} {MATTERMOST_IMAGE_NAME}"
                 )
             else:
                 print("[launch] Mattermost container already running.")
         else:
             print("[launch] Starting Mattermost container...")
-            # Remove stopped container if it exists
             subprocess.run(
-                f"docker rm -f {MATTERMOST_CONTAINER_NAME}",
+                f"{docker} rm -f {MATTERMOST_CONTAINER_NAME}",
                 shell=True, capture_output=True,
             )
             _run(
-                f"docker run -d --name {MATTERMOST_CONTAINER_NAME}"
+                f"{docker} run -d --name {MATTERMOST_CONTAINER_NAME}"
                 f" -p {MATTERMOST_PORT}:{MATTERMOST_PORT} {MATTERMOST_IMAGE_NAME}"
             )
             print("  Waiting for Mattermost to be ready...")
             import time
             time.sleep(5)
+    elif args.mattermost_url:
+        print("[launch] Using remote Mattermost, skipping Docker.")
     else:
         print("[launch] Docker not found. Assuming Mattermost is running externally.")
 
@@ -156,10 +181,11 @@ def cmd_reset(args):
     if not _docker_available():
         print("[reset] Docker is not available.")
         return
+    docker = _docker_cmd()
     print("[reset] Resetting Mattermost container...")
-    _run(f"docker rm -f {MATTERMOST_CONTAINER_NAME}")
+    _run(f"{docker} rm -f {MATTERMOST_CONTAINER_NAME}")
     _run(
-        f"docker run -d --name {MATTERMOST_CONTAINER_NAME}"
+        f"{docker} run -d --name {MATTERMOST_CONTAINER_NAME}"
         f" -p {MATTERMOST_PORT}:{MATTERMOST_PORT} {MATTERMOST_IMAGE_NAME}"
     )
     print("[reset] Done.")
