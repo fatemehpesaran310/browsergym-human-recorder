@@ -1,9 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "browsergym-meta"
-description = "BrowserGym: a gym environment for web task automation in the Chromium browser"
-dynamic = ["version"]
-[tool.setuptools]
-packages = []  # meta distribution, packages are included as dependencies
+name = "browsergym-human-recorder"
+version = "0.1.0"
+description = "CLI for recording human browser trajectories with BrowserGym"
+authors = [
+    {name = "Fatemeh Pesaran"},
+]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+dependencies = [
+    "gdown",
+]
+
+[project.scripts]
+browsergym-human-recorder = "browsergym_human_recorder.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["browsergym_human_recorder"]
+
 [tool.black]
 line-length = 100
 include = '\.pyi?$'
@@ -25,7 +43,7 @@ exclude = '''
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    'ignore::UserWarning:gymnasium.*:',  # too many "The obs is not within the observation space." warnings.
+    'ignore::UserWarning:gymnasium.*:',
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
