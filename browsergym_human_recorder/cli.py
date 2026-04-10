@@ -7,10 +7,13 @@ Commands:
 """
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
 import sys
+import urllib.request
+import urllib.error
 from pathlib import Path
 
 
@@ -22,12 +25,33 @@ MATTERMOST_DOCKER_GDRIVE_ID = "1aM2zyvCgONH0pD8MpYKj6i2e1Xo4VueL"
 MATTERMOST_IMAGE_NAME = "mattermost-populated"
 MATTERMOST_CONTAINER_NAME = "mattermost"
 MATTERMOST_PORT = 8065
+DEFAULT_RESET_URL = "https://reset.webarena-pro.win/reset"
 
 
 def _run(cmd, **kwargs):
     """Run a shell command, printing it first."""
     print(f"  $ {cmd}")
     return subprocess.run(cmd, shell=True, check=True, **kwargs)
+
+
+def _remote_reset(reset_url, api_key=None):
+    """Call the remote reset API endpoint."""
+    url = reset_url or DEFAULT_RESET_URL
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["X-API-Key"] = api_key
+    req = urllib.request.Request(url, data=b"", headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+            print(f"  {data.get('message', 'Reset successful.')}")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        print(f"  [error] Reset failed ({e.code}): {body}")
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        print(f"  [error] Could not reach reset server: {e.reason}")
+        sys.exit(1)
 
 
 def _docker_cmd():
@@ -149,7 +173,11 @@ def cmd_launch(args):
             import time
             time.sleep(5)
     elif args.mattermost_url:
-        print("[launch] Using remote Mattermost, skipping Docker.")
+        if args.reset:
+            print("[launch] Resetting remote Mattermost...")
+            _remote_reset(args.reset_url, args.api_key)
+        else:
+            print("[launch] Using remote Mattermost, skipping Docker.")
     else:
         print("[launch] Docker not found. Assuming Mattermost is running externally.")
 
@@ -177,9 +205,15 @@ def cmd_launch(args):
 # ---------------------------------------------------------------------------
 
 def cmd_reset(args):
-    """Reset the Mattermost Docker container to a clean state."""
+    """Reset the Mattermost container — locally via Docker or remotely via API."""
+    if args.remote:
+        print("[reset] Resetting remote Mattermost...")
+        _remote_reset(args.reset_url, args.api_key)
+        print("[reset] Done.")
+        return
+
     if not _docker_available():
-        print("[reset] Docker is not available.")
+        print("[reset] Docker is not available locally. Use --remote for remote reset.")
         return
     docker = _docker_cmd()
     print("[reset] Resetting Mattermost container...")
@@ -226,9 +260,28 @@ def main():
         "--mattermost_url", type=str, default=None,
         help="Mattermost URL (default: http://localhost:8065)",
     )
+    launch_parser.add_argument(
+        "--reset_url", type=str, default=None,
+        help=f"Reset API URL (default: {DEFAULT_RESET_URL})",
+    )
+    launch_parser.add_argument(
+        "--api_key", type=str, default=None,
+        help="API key for the reset server",
+    )
 
     # --- reset ---
-    subparsers.add_parser("reset", help="Reset the Mattermost Docker container")
+    reset_parser = subparsers.add_parser("reset", help="Reset the Mattermost Docker container")
+    reset_parser.add_argument(
+        "--remote", action="store_true", help="Reset via remote API instead of local Docker"
+    )
+    reset_parser.add_argument(
+        "--reset_url", type=str, default=None,
+        help=f"Reset API URL (default: {DEFAULT_RESET_URL})",
+    )
+    reset_parser.add_argument(
+        "--api_key", type=str, default=None,
+        help="API key for the reset server",
+    )
 
     args = parser.parse_args()
 
