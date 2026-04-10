@@ -2,6 +2,14 @@
 
 Record free-form human browser interactions and automatically translate them into BrowserGym action strings. Built on top of BrowserGym and WebArena-Pro.
 
+## Hosted Websites
+
+The following websites are hosted and available for recording:
+
+| Website | URL |
+|---|---|
+| Mattermost | [mattermost.webarena-pro.win](https://mattermost.webarena-pro.win) |
+
 ## Quick Setup
 
 ```bash
@@ -14,14 +22,17 @@ git clone https://github.com/fatemehpesaran310/browsergym-human-recorder.git
 cd browsergym-human-recorder
 pip install -e .
 
-# 3. Install dependencies (sub-packages, Playwright, Mattermost Docker image)
+# 3. Install dependencies (sub-packages, Playwright)
 browsergym-human-recorder install
 
 # 4. Launch the recorder
 browsergym-human-recorder launch --task_id 0
+
+# 5. Reset after each recording to ensure a clean state
+browsergym-human-recorder reset --api_key YOUR_API_KEY
 ```
 
-That's it! The `install` command handles everything: BrowserGym sub-packages, Playwright browsers, and downloading + loading the Mattermost Docker image.
+That's it! The `install` command handles BrowserGym sub-packages and Playwright browsers. The recorder connects to the hosted websites by default. The API key for resetting is provided separately.
 
 ## CLI Reference
 
@@ -30,14 +41,13 @@ That's it! The `install` command handles everything: BrowserGym sub-packages, Pl
 Installs all dependencies:
 - BrowserGym sub-packages (`core`, `experiments`, `webarena_pro`)
 - Playwright Chromium browser
-- Downloads and loads the pre-populated Mattermost Docker image
 
 ### `browsergym-human-recorder launch`
 
-Launches the trajectory recorder. Automatically starts the Mattermost Docker container if needed.
+Launches the trajectory recorder. Connects to the hosted Mattermost by default.
 
 ```
-browsergym-human-recorder launch --task_id <0-9> [--output_dir ./trajectories] [--max_steps 50] [--timeout 600] [--reset] [--mattermost_url URL]
+browsergym-human-recorder launch --task_id <0-9> [--output_dir ./trajectories] [--max_steps 50] [--timeout 600] [--reset --api_key KEY]
 ```
 
 | Option | Description |
@@ -46,24 +56,36 @@ browsergym-human-recorder launch --task_id <0-9> [--output_dir ./trajectories] [
 | `--output_dir` | Output directory (default: `./trajectories`) |
 | `--max_steps` | Max steps per trajectory (default: 50) |
 | `--timeout` | Max recording time in seconds (default: 600) |
-| `--reset` | Reset Mattermost container before recording |
-| `--mattermost_url` | Custom Mattermost URL (default: `http://localhost:8065`) |
+| `--reset` | Reset Mattermost before recording (requires API key) |
+| `--api_key` | API key for the reset server (provided separately) |
+| `--mattermost_url` | Custom Mattermost URL (default: `https://mattermost.webarena-pro.win`) |
 
 ### `browsergym-human-recorder reset`
 
-Resets the Mattermost Docker container to a clean state. Use between recordings to ensure consistent starting conditions.
+Resets the Mattermost instance to a clean state. Use between recordings to ensure consistent starting conditions.
 
-## Manual Setup (Alternative)
+```
+browsergym-human-recorder reset --api_key KEY
+```
+
+| Option | Description |
+|---|---|
+| `--api_key` | API key for the reset server (required, provided separately) |
+
+## Local Hosting (Alternative)
 
 <details>
-<summary>Click to expand manual setup steps</summary>
+<summary>Click to expand local hosting setup</summary>
+
+If you prefer to host Mattermost locally instead of using the hosted version:
 
 ```bash
-pip install -e browsergym/core
-pip install -e browsergym/experiments
-pip install -e browsergym/webarena_pro
+# Install with Docker support
+browsergym-human-recorder install --docker
+
+# Or manually:
+pip install -e browsergym/core -e browsergym/experiments -e browsergym/webarena_pro
 playwright install chromium
-export WAP_MATTERMOST="http://localhost:8065"
 ```
 
 Download the [Mattermost Docker image](https://drive.google.com/file/d/1aM2zyvCgONH0pD8MpYKj6i2e1Xo4VueL/view?usp=sharing), then:
@@ -73,19 +95,19 @@ docker load -i mattermost-populated.tar
 docker run -d --name mattermost -p 8065:8065 mattermost-populated
 ```
 
-Run the recorder directly:
+Launch the recorder pointing to localhost:
 
 ```bash
-python record_trajectory.py --task_id 0 --output_dir ./trajectories
+browsergym-human-recorder launch --task_id 0 --mattermost_url http://localhost:8065
+```
+
+Reset the local container between tasks:
+
+```bash
+browsergym-human-recorder reset --local
 ```
 
 </details>
-
-## Run the Recorder
-
-```bash
-browsergym-human-recorder launch --task_id 0 --output_dir ./trajectories
-```
 
 ## Usage
 
