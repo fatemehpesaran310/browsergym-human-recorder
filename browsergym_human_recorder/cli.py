@@ -37,7 +37,10 @@ def _run(cmd, **kwargs):
 def _remote_reset(reset_url, api_key=None):
     """Call the remote reset API endpoint."""
     url = reset_url or DEFAULT_RESET_URL
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "browsergym-human-recorder/0.1.0",
+    }
     if api_key:
         headers["X-API-Key"] = api_key
     req = urllib.request.Request(url, data=b"", headers=headers, method="POST")
