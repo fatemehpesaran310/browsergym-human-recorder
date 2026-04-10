@@ -110,5 +110,15 @@
         "must_include": ["5"]
       }
     }
+  },
+  {
+    "task_id": 100,
+    "sites": ["nextcloud"],
+    "start_url": "__NEXTCLOUD__",
+    "intent": "Delete all the individual contents of each folder then restore them using the trash folder and add them back to the folders they originally came from.",
+    "eval": {
+      "eval_types": ["manual"],
+      "reference_answers": {}
+    }
   }
 ]

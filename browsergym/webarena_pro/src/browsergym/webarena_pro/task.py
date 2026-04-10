@@ -49,6 +49,7 @@ class GenericWebArenaProTask(AbstractBrowserTask):
         # Add new sites here: "__NEWSITE__": "newsite"
         for pattern, url_key in {
             "__MATTERMOST__": "mattermost",
+            "__NEXTCLOUD__": "nextcloud",
         }.items():
             all_configs_str = all_configs_str.replace(pattern, self.instance.urls[url_key])
 
